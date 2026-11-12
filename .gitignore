@@ -1,0 +1,14 @@
+aufnahme.wav
+
+*.onnx
+*.dll
+*.exe
+
+__pycache__/
+*.pyc
+*.db
+*.log
+.env
+
+venv/
+.venv/
