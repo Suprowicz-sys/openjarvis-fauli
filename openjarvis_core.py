@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from path_sandbox import PathSandbox
+
 
 class OpenJarvisFileSystem:
 
@@ -7,54 +9,31 @@ class OpenJarvisFileSystem:
 
         self.base_path = Path.cwd().resolve()
 
-        if allowed_paths:
-            self.allowed_dirs = {
-                Path(p).resolve()
-                for p in allowed_paths
-            }
-        else:
-            self.allowed_dirs = {
-                self.base_path
-            }
+        if allowed_paths is None:
 
-    def _is_allowed(self, file_path):
+            allowed_paths = [
+                str(self.base_path)
+            ]
 
-        try:
-            resolved_path = file_path.resolve()
-
-            for allowed_dir in self.allowed_dirs:
-
-                try:
-                    resolved_path.relative_to(allowed_dir)
-                    return True
-
-                except ValueError:
-                    pass
-
-            return False
-
-        except Exception:
-            return False
+        self.sandbox = PathSandbox(
+            allowed_paths
+        )
 
     def list_files(self, path):
 
         try:
-            target = Path(path).resolve()
 
-            if not self._is_allowed(target):
-                raise PermissionError(
-                    f"Zugriff verweigert auf {target}"
-                )
+            target = self.sandbox.validate(
+                path
+            )
 
             if not target.exists():
                 return []
 
-            files = []
-
-            for item in target.iterdir():
-                files.append(str(item))
-
-            return files
+            return [
+                str(item)
+                for item in target.iterdir()
+            ]
 
         except Exception as e:
 
@@ -67,12 +46,10 @@ class OpenJarvisFileSystem:
     def read_file(self, path):
 
         try:
-            target = Path(path).resolve()
 
-            if not self._is_allowed(target):
-                raise PermissionError(
-                    f"Zugriff verweigert auf {target}"
-                )
+            target = self.sandbox.validate(
+                path
+            )
 
             if not target.exists():
 
@@ -103,15 +80,17 @@ class OpenJarvisFileSystem:
 
             return None
 
-    def write_file(self, path, content):
+    def write_file(
+        self,
+        path,
+        content
+    ):
 
         try:
-            target = Path(path).resolve()
 
-            if not self._is_allowed(target):
-                raise PermissionError(
-                    f"Schreiben verweigert auf {target}"
-                )
+            target = self.sandbox.validate(
+                path
+            )
 
             target.parent.mkdir(
                 parents=True,
@@ -133,15 +112,17 @@ class OpenJarvisFileSystem:
 
             return False
 
-    def append_file(self, path, content):
+    def append_file(
+        self,
+        path,
+        content
+    ):
 
         try:
-            target = Path(path).resolve()
 
-            if not self._is_allowed(target):
-                raise PermissionError(
-                    f"Schreiben verweigert auf {target}"
-                )
+            target = self.sandbox.validate(
+                path
+            )
 
             target.parent.mkdir(
                 parents=True,
@@ -166,9 +147,15 @@ class OpenJarvisFileSystem:
 
             return False
 
-    def search_in_file(self, path, query):
+    def search_in_file(
+        self,
+        path,
+        query
+    ):
 
-        content = self.read_file(path)
+        content = self.read_file(
+            path
+        )
 
         if content is None:
             return []
@@ -181,79 +168,161 @@ class OpenJarvisFileSystem:
         ):
 
             if query.lower() in line.lower():
-                matches.append(index)
+
+                matches.append(
+                    index
+                )
 
         return matches
 
+    def replace_in_file(
+        self,
+        path,
+        old_text,
+        new_text
+    ):
 
-if __name__ == "__main__":
+        try:
 
-    print(
-        "--- OpenJarvis Core Test ---"
-    )
+            target = self.sandbox.validate(
+                path
+            )
 
-    fs = OpenJarvisFileSystem(
-        [
-            str(Path.cwd()),
-            r"F:\TestDaten"
-        ]
-    )
+            content = self.read_file(
+                path
+            )
 
-    output_path = (
-        r"F:\TestDaten\test_output.txt"
-    )
+            if content is None:
+                return False
 
-    print("\n1. list_files('.')")
+            updated_content = (
+                content.replace(
+                    old_text,
+                    new_text
+                )
+            )
 
-    files = fs.list_files(".")
+            target.write_text(
+                updated_content,
+                encoding="utf-8"
+            )
 
-    print(files)
+            return True
 
-    print("\n2. write_file()")
+        except Exception as e:
 
-    ok = fs.write_file(
-        output_path,
-        "Hallo Welt!\n"
-        "Dies ist ein Test von OpenJarvis.\n"
-        "Ich kann dir helfen, Code zu schreiben.\n"
-    )
+            print(
+                f"[Fehler] Ersetzen: {e}"
+            )
 
-    print("Erfolg:", ok)
+            return False
 
-    print("\n3. read_file()")
+    def create_folder(
+        self,
+        path
+    ):
 
-    print(
-        fs.read_file(output_path)
-    )
+        try:
 
-    print(
-        "\n4. search_in_file('OpenJarvis')"
-    )
+            target = self.sandbox.validate(
+                path
+            )
 
-    print(
-        fs.search_in_file(
-            output_path,
-            "OpenJarvis"
-        )
-    )
+            target.mkdir(
+                parents=True,
+                exist_ok=True
+            )
 
-    print(
-        "\n5. append_file()"
-    )
+            return True
 
-    fs.append_file(
-        output_path,
-        "\nDies ist eine neue Zeile."
-    )
+        except Exception as e:
 
-    print(
-        "\n6. Finaler Check"
-    )
+            print(
+                f"[Fehler] Ordner erstellen: {e}"
+            )
 
-    print(
-        fs.read_file(output_path)
-    )
+            return False
 
-    print(
-        "\n--- Test abgeschlossen ---"
-    )
+    def delete_file(
+        self,
+        path
+    ):
+
+        try:
+
+            target = self.sandbox.validate(
+                path
+            )
+
+            if target.exists():
+
+                target.unlink()
+
+            return True
+
+        except Exception as e:
+
+            print(
+                f"[Fehler] Löschen: {e}"
+            )
+
+            return False
+
+    def directory_tree(
+        self,
+        path
+    ):
+
+        try:
+
+            target = self.sandbox.validate(
+                path
+            )
+
+            if not target.exists():
+
+                return (
+                    "Pfad existiert nicht."
+                )
+
+            result = [
+                str(target)
+            ]
+
+            entries = sorted(
+                target.iterdir(),
+                key=lambda p: (
+                    not p.is_dir(),
+                    p.name.lower()
+                )
+            )
+
+            for index, entry in enumerate(
+                entries
+            ):
+
+                is_last = (
+                    index ==
+                    len(entries) - 1
+                )
+
+                prefix = (
+                    "└── "
+                    if is_last
+                    else "├── "
+                )
+
+                result.append(
+                    prefix +
+                    entry.name
+                )
+
+            return "\n".join(
+                result
+            )
+
+        except Exception as e:
+
+            return (
+                f"Fehler: {e}"
+            )
