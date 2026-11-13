@@ -2,6 +2,7 @@ from openjarvis_core import OpenJarvisFileSystem
 from memory_store import MemoryStore
 from task_manager import TaskManager
 from project_manager import ProjectManager
+from project_notes import ProjectNotes
 
 
 class ToolRunner:
@@ -20,6 +21,8 @@ class ToolRunner:
         self.tasks = TaskManager()
 
         self.projects = ProjectManager()
+
+        self.notes = ProjectNotes()
 
         self.tools = {
 
@@ -128,6 +131,19 @@ class ToolRunner:
 
             "work_on_project":
                 self.projects.work_on_project,
+
+            # -------------------
+            # Projektnotizen
+            # -------------------
+
+            "add_note":
+                self.notes.add_note,
+
+            "get_notes":
+                self.notes.get_notes,
+
+            "list_note_projects":
+                self.notes.list_projects,
         }
 
     def run(
@@ -156,11 +172,52 @@ if __name__ == "__main__":
     runner = ToolRunner()
 
     print(
-        "\n=== PROJECT AGENT TEST ===\n"
+        "\n=== PROJECT NOTES TEST ===\n"
     )
 
     print(
-        "Projektstatus:"
+        "1. Notiz speichern"
+    )
+
+    print(
+        runner.run(
+            "add_note",
+            project_name="OpenJarvis",
+            text="Directory Tree rekursiv fertiggestellt."
+        )
+    )
+
+    print(
+        runner.run(
+            "add_note",
+            project_name="OpenJarvis",
+            text="Projektstatus implementiert."
+        )
+    )
+
+    print(
+        "\n2. Projektnotizen anzeigen"
+    )
+
+    print(
+        runner.run(
+            "get_notes",
+            project_name="OpenJarvis"
+        )
+    )
+
+    print(
+        "\n3. Projekte mit Notizen"
+    )
+
+    print(
+        runner.run(
+            "list_note_projects"
+        )
+    )
+
+    print(
+        "\n4. Projektstatus"
     )
 
     print(
@@ -171,7 +228,7 @@ if __name__ == "__main__":
     )
 
     print(
-        "\nArbeite an Projekt:"
+        "\n5. Arbeite an Projekt"
     )
 
     print(
