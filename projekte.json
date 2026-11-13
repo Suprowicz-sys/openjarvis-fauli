@@ -57,6 +57,11 @@
                 "id": 1,
                 "status": "offen",
                 "title": "Projekt testen"
+            },
+            {
+                "id": 2,
+                "status": "offen",
+                "title": "Projekt testen"
             }
         ]
     }
