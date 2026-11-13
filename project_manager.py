@@ -56,7 +56,10 @@ class ProjectManager:
 
         if project_name not in projects:
 
-            projects[project_name] = {
+            projects[
+                project_name
+            ] = {
+
                 "tasks": []
             }
 
@@ -95,9 +98,13 @@ class ProjectManager:
         if tasks:
 
             next_id = (
+
                 max(
+
                     task["id"]
+
                     for task in tasks
+
                 ) + 1
             )
 
@@ -148,7 +155,9 @@ class ProjectManager:
 
         for task in tasks:
 
-            if task["status"] == "offen":
+            if task[
+                "status"
+            ] == "offen":
 
                 return task
 
@@ -170,11 +179,13 @@ class ProjectManager:
             project_name
         ]["tasks"]:
 
-            if task["id"] == task_id:
+            if task[
+                "id"
+            ] == task_id:
 
-                task["status"] = (
-                    "erledigt"
-                )
+                task[
+                    "status"
+                ] = "erledigt"
 
                 self._save(
                     projects
@@ -200,7 +211,7 @@ class ProjectManager:
             project_name
         ]["tasks"]
 
-        original_count = len(
+        before = len(
             tasks
         )
 
@@ -209,9 +220,12 @@ class ProjectManager:
         ]["tasks"] = [
 
             task
+
             for task in tasks
 
-            if task["id"] != task_id
+            if task[
+                "id"
+            ] != task_id
         ]
 
         self._save(
@@ -219,13 +233,148 @@ class ProjectManager:
         )
 
         return (
+
             len(
                 projects[
                     project_name
                 ]["tasks"]
             )
-            != original_count
+
+            != before
         )
+
+    def project_status(
+        self,
+        project_name
+    ):
+
+        projects = self._load()
+
+        if project_name not in projects:
+
+            return None
+
+        tasks = projects[
+            project_name
+        ]["tasks"]
+
+        total = len(
+            tasks
+        )
+
+        completed = len(
+
+            [
+
+                task
+
+                for task in tasks
+
+                if task[
+                    "status"
+                ] == "erledigt"
+            ]
+        )
+
+        open_tasks = (
+            total -
+            completed
+        )
+
+        progress = 0
+
+        if total > 0:
+
+            progress = round(
+
+                (
+                    completed
+                    / total
+                ) * 100,
+
+                1
+            )
+
+        next_task = None
+
+        for task in tasks:
+
+            if task[
+                "status"
+            ] == "offen":
+
+                next_task = task
+
+                break
+
+        return {
+
+            "project":
+                project_name,
+
+            "total":
+                total,
+
+            "completed":
+                completed,
+
+            "open":
+                open_tasks,
+
+            "progress":
+                progress,
+
+            "next_task":
+                next_task
+        }
+
+    def work_on_project(
+        self,
+        project_name
+    ):
+
+        projects = self._load()
+
+        if project_name not in projects:
+
+            return None
+
+        next_task = self.next_project_task(
+            project_name
+        )
+
+        if not next_task:
+
+            return {
+
+                "project":
+                    project_name,
+
+                "message":
+                    "Keine offenen Aufgaben vorhanden."
+            }
+
+        return {
+
+            "project":
+                project_name,
+
+            "task":
+                next_task["title"],
+
+            "steps": [
+
+                "Anforderungen prüfen",
+
+                "Aufgabe in kleine Schritte zerlegen",
+
+                "Implementierung beginnen",
+
+                "Zwischentest durchführen",
+
+                "Aufgabe abschließen"
+            ]
+        }
 
 
 if __name__ == "__main__":
@@ -233,7 +382,27 @@ if __name__ == "__main__":
     pm = ProjectManager()
 
     print(
-        "\n=== PROJECT TEST ===\n"
+        "\n=== PROJECT STATUS TEST ===\n"
+    )
+
+    print(
+        pm.create_project(
+            "OpenJarvis"
+        )
+    )
+
+    print(
+        pm.add_project_task(
+            "OpenJarvis",
+            "GUI bauen"
+        )
+    )
+
+    print(
+        pm.add_project_task(
+            "OpenJarvis",
+            "LLM integrieren"
+        )
     )
 
     print(
@@ -244,14 +413,25 @@ if __name__ == "__main__":
     )
 
     print(
-        pm.delete_project_task(
-            "OpenJarvis",
-            2
+        "\nSTATUS:"
+    )
+
+    print(
+        pm.project_status(
+            "OpenJarvis"
         )
     )
 
     print(
-        pm.get_project(
+        "\nARBEITE AN PROJEKT:"
+    )
+
+    print(
+        pm.work_on_project(
             "OpenJarvis"
         )
+    )
+
+    print(
+        "\n=== TEST BEENDET ==="
     )

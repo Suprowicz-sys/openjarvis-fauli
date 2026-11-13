@@ -35,10 +35,29 @@
                 "id": 8,
                 "status": "offen",
                 "title": "Lokales LLM"
+            },
+            {
+                "id": 9,
+                "status": "offen",
+                "title": "GUI bauen"
+            },
+            {
+                "id": 10,
+                "status": "offen",
+                "title": "LLM integrieren"
             }
         ]
     },
     "Fauli": {
         "tasks": []
+    },
+    "SelbsttestProjekt": {
+        "tasks": [
+            {
+                "id": 1,
+                "status": "offen",
+                "title": "Projekt testen"
+            }
+        ]
     }
 }

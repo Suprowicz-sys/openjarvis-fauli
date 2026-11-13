@@ -122,6 +122,12 @@ class ToolRunner:
 
             "delete_project_task":
                 self.projects.delete_project_task,
+
+            "project_status":
+                self.projects.project_status,
+
+            "work_on_project":
+                self.projects.work_on_project,
         }
 
     def run(
@@ -150,93 +156,27 @@ if __name__ == "__main__":
     runner = ToolRunner()
 
     print(
-        "\n=== PROJECT TOOL TEST V2 ===\n"
+        "\n=== PROJECT AGENT TEST ===\n"
     )
 
     print(
-        "1. Projekt anlegen"
+        "Projektstatus:"
     )
 
     print(
         runner.run(
-            "create_project",
+            "project_status",
             project_name="OpenJarvis"
         )
     )
 
     print(
-        "\n2. Projektaufgaben"
+        "\nArbeite an Projekt:"
     )
 
     print(
         runner.run(
-            "add_project_task",
-            project_name="OpenJarvis",
-            title="GUI bauen"
-        )
-    )
-
-    print(
-        runner.run(
-            "add_project_task",
-            project_name="OpenJarvis",
-            title="Lokales LLM"
-        )
-    )
-
-    print(
-        "\n3. Projekt anzeigen"
-    )
-
-    print(
-        runner.run(
-            "get_project",
-            project_name="OpenJarvis"
-        )
-    )
-
-    print(
-        "\n4. Projektaufgabe erledigen"
-    )
-
-    print(
-        runner.run(
-            "complete_project_task",
-            project_name="OpenJarvis",
-            task_id=1
-        )
-    )
-
-    print(
-        "\n5. Projekt anzeigen"
-    )
-
-    print(
-        runner.run(
-            "get_project",
-            project_name="OpenJarvis"
-        )
-    )
-
-    print(
-        "\n6. Projektaufgabe löschen"
-    )
-
-    print(
-        runner.run(
-            "delete_project_task",
-            project_name="OpenJarvis",
-            task_id=2
-        )
-    )
-
-    print(
-        "\n7. Projekt anzeigen"
-    )
-
-    print(
-        runner.run(
-            "get_project",
+            "work_on_project",
             project_name="OpenJarvis"
         )
     )

@@ -23,5 +23,10 @@
         "id": 6,
         "status": "offen",
         "title": "Lokales LLM integrieren"
+    },
+    {
+        "id": 7,
+        "status": "offen",
+        "title": "Selbsttest Aufgabe"
     }
 ]

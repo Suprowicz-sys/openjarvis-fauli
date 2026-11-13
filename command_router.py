@@ -7,10 +7,16 @@ class CommandRouter:
 
         self.runner = ToolRunner()
 
-    def format_tasks(self, tasks):
+    def format_tasks(
+        self,
+        tasks
+    ):
 
         if not tasks:
-            return "Keine Aufgaben vorhanden."
+
+            return (
+                "Keine Aufgaben vorhanden."
+            )
 
         lines = []
 
@@ -22,22 +28,32 @@ class CommandRouter:
                 f"{task['title']}"
             )
 
-        return "\n".join(lines)
+        return "\n".join(
+            lines
+        )
 
-    def handle(self, command):
+    def handle(
+        self,
+        command
+    ):
 
         command = command.strip()
 
         if not command:
-            return "Leerer Befehl."
+
+            return (
+                "Leerer Befehl."
+            )
 
         lower = command.lower()
 
         # ==================================
-        # PROJEKTVERWALTUNG V1
+        # PROJEKTVERWALTUNG
         # ==================================
 
-        if lower.startswith("neues projekt"):
+        if lower.startswith(
+            "neues projekt"
+        ):
 
             project_name = command.replace(
                 "neues projekt",
@@ -46,6 +62,7 @@ class CommandRouter:
             ).strip()
 
             if not project_name:
+
                 return (
                     "Verwendung:\n"
                     "neues projekt NAME"
@@ -68,13 +85,18 @@ class CommandRouter:
             )
 
             if not projects:
+
                 return (
                     "Keine Projekte vorhanden."
                 )
 
-            return "\n".join(projects)
+            return "\n".join(
+                projects
+            )
 
-        if lower.startswith("projektaufgabe"):
+        if lower.startswith(
+            "projektaufgabe"
+        ):
 
             try:
 
@@ -93,7 +115,10 @@ class CommandRouter:
                     .strip()
                 )
 
-                title = parts[1].strip()
+                title = (
+                    parts[1]
+                    .strip()
+                )
 
                 task = self.runner.run(
                     "add_project_task",
@@ -117,11 +142,104 @@ class CommandRouter:
 
                 return (
                     "Verwendung:\n"
-                    "projektaufgabe "
-                    "PROJEKT | TEXT"
+                    "projektaufgabe PROJEKT | TEXT"
                 )
 
-        if lower.startswith("zeige projekt"):
+        if lower.startswith(
+            "erledige projektaufgabe"
+        ):
+
+            try:
+
+                parts = command.split("|")
+
+                project_name = (
+                    parts[0]
+                    .replace(
+                        "erledige projektaufgabe",
+                        "",
+                        1
+                    )
+                    .strip()
+                )
+
+                task_id = int(
+                    parts[1].strip()
+                )
+
+                success = self.runner.run(
+                    "complete_project_task",
+                    project_name=project_name,
+                    task_id=task_id
+                )
+
+                if success:
+
+                    return (
+                        f"Projektaufgabe "
+                        f"{task_id} erledigt."
+                    )
+
+                return (
+                    "Projekt oder Aufgabe nicht gefunden."
+                )
+
+            except Exception:
+
+                return (
+                    "Verwendung:\n"
+                    "erledige projektaufgabe PROJEKT | ID"
+                )
+
+        if lower.startswith(
+            "lösche projektaufgabe"
+        ):
+
+            try:
+
+                parts = command.split("|")
+
+                project_name = (
+                    parts[0]
+                    .replace(
+                        "lösche projektaufgabe",
+                        "",
+                        1
+                    )
+                    .strip()
+                )
+
+                task_id = int(
+                    parts[1].strip()
+                )
+
+                success = self.runner.run(
+                    "delete_project_task",
+                    project_name=project_name,
+                    task_id=task_id
+                )
+
+                if success:
+
+                    return (
+                        f"Projektaufgabe "
+                        f"{task_id} gelöscht."
+                    )
+
+                return (
+                    "Projekt oder Aufgabe nicht gefunden."
+                )
+
+            except Exception:
+
+                return (
+                    "Verwendung:\n"
+                    "lösche projektaufgabe PROJEKT | ID"
+                )
+
+        if lower.startswith(
+            "zeige projekt"
+        ):
 
             project_name = command.replace(
                 "zeige projekt",
@@ -166,7 +284,9 @@ class CommandRouter:
                         f"{task['title']}"
                     )
 
-            return "\n".join(lines)
+            return "\n".join(
+                lines
+            )
 
         if lower.startswith(
             "nächste projektaufgabe"
@@ -186,8 +306,7 @@ class CommandRouter:
             if task is None:
 
                 return (
-                    "Keine offene "
-                    "Projektaufgabe gefunden."
+                    "Keine offene Projektaufgabe gefunden."
                 )
 
             return (
@@ -196,8 +315,110 @@ class CommandRouter:
                 f"{task['title']}"
             )
 
+        if lower.startswith(
+            "projektstatus"
+        ):
+
+            project_name = command.replace(
+                "projektstatus",
+                "",
+                1
+            ).strip()
+
+            data = self.runner.run(
+                "project_status",
+                project_name=project_name
+            )
+
+            if data is None:
+
+                return (
+                    "Projekt nicht gefunden."
+                )
+
+            lines = [
+
+                f"Projekt: {data['project']}",
+
+                "",
+
+                f"Gesamt: {data['total']}",
+
+                f"Offen: {data['open']}",
+
+                f"Erledigt: {data['completed']}",
+
+                f"Fortschritt: {data['progress']} %"
+            ]
+
+            if data["next_task"]:
+
+                lines.extend(
+
+                    [
+                        "",
+
+                        "Nächste Aufgabe:",
+
+                        data["next_task"]["title"]
+                    ]
+                )
+
+            return "\n".join(lines)
+
+        if lower.startswith(
+            "arbeite an projekt"
+        ):
+
+            project_name = command.replace(
+                "arbeite an projekt",
+                "",
+                1
+            ).strip()
+
+            data = self.runner.run(
+                "work_on_project",
+                project_name=project_name
+            )
+
+            if data is None:
+
+                return (
+                    "Projekt nicht gefunden."
+                )
+
+            if "message" in data:
+
+                return data["message"]
+
+            lines = [
+
+                f"Projekt: {data['project']}",
+
+                "",
+
+                "Nächste Aufgabe:",
+
+                data["task"],
+
+                "",
+
+                "Arbeitsplan:"
+            ]
+
+            for index, step in enumerate(
+                data["steps"],
+                start=1
+            ):
+
+                lines.append(
+                    f"{index}. {step}"
+                )
+
+            return "\n".join(lines)
+
         # ==================================
-        # AUFGABENVERWALTUNG
+        # AUFGABEN
         # ==================================
 
         if lower.startswith(
@@ -251,8 +472,7 @@ class CommandRouter:
                 if success:
 
                     return (
-                        f"Aufgabe "
-                        f"{task_id} erledigt."
+                        f"Aufgabe {task_id} erledigt."
                     )
 
                 return (
@@ -288,8 +508,7 @@ class CommandRouter:
                 if success:
 
                     return (
-                        f"Aufgabe "
-                        f"{task_id} gelöscht."
+                        f"Aufgabe {task_id} gelöscht."
                     )
 
                 return (
@@ -344,8 +563,7 @@ class CommandRouter:
             if value:
 
                 return (
-                    f"Du heißt "
-                    f"{value}."
+                    f"Du heißt {value}."
                 )
 
             return (
@@ -381,61 +599,38 @@ if __name__ == "__main__":
 
     router = CommandRouter()
 
-    print(
-        "\n=== OpenJarvis Router ==="
-    )
+    print("\n=== OpenJarvis Router V4 ===")
 
-    print(
-        "\nProjektverwaltung:"
-    )
+    print("\nProjektverwaltung:")
 
-    print(
-        "neues projekt OpenJarvis"
-    )
+    print("neues projekt OpenJarvis")
+    print("zeige projekte")
+    print("projektaufgabe OpenJarvis | GUI bauen")
+    print("erledige projektaufgabe OpenJarvis | 1")
+    print("lösche projektaufgabe OpenJarvis | 2")
+    print("zeige projekt OpenJarvis")
+    print("nächste projektaufgabe OpenJarvis")
+    print("projektstatus OpenJarvis")
+    print("arbeite an projekt OpenJarvis")
 
-    print(
-        "zeige projekte"
-    )
+    print("\nAufgabenverwaltung:")
 
-    print(
-        "projektaufgabe OpenJarvis | GUI bauen"
-    )
+    print("neue aufgabe TEXT")
+    print("zeige aufgaben")
+    print("erledige aufgabe ID")
+    print("lösche aufgabe ID")
+    print("was ist die nächste aufgabe")
 
-    print(
-        "zeige projekt OpenJarvis"
-    )
+    print("\nGedächtnis:")
 
-    print(
-        "nächste projektaufgabe OpenJarvis"
-    )
+    print("zeige gedächtnis")
+    print("wie heiße ich")
 
-    print(
-        "\nAufgabenverwaltung:"
-    )
+    print("\nDateisystem:")
 
-    print(
-        "neue aufgabe TEXT"
-    )
+    print("zeige baum F:\\Jarvis")
 
-    print(
-        "zeige aufgaben"
-    )
-
-    print(
-        "erledige aufgabe ID"
-    )
-
-    print(
-        "lösche aufgabe ID"
-    )
-
-    print(
-        "was ist die nächste aufgabe"
-    )
-
-    print(
-        "\nexit = beenden\n"
-    )
+    print("\nexit = beenden\n")
 
     while True:
 
@@ -456,10 +651,7 @@ if __name__ == "__main__":
                 command
             )
 
-            print(
-                "\nErgebnis:"
-            )
-
+            print("\nErgebnis:")
             print(result)
 
         except Exception as e:
