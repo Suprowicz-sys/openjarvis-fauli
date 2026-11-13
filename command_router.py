@@ -7,6 +7,23 @@ class CommandRouter:
 
         self.runner = ToolRunner()
 
+    def format_tasks(self, tasks):
+
+        if not tasks:
+            return "Keine Aufgaben vorhanden."
+
+        lines = []
+
+        for task in tasks:
+
+            lines.append(
+                f"[{task['id']}] "
+                f"{task['status'].upper()} "
+                f"{task['title']}"
+            )
+
+        return "\n".join(lines)
+
     def handle(self, command):
 
         command = command.strip()
@@ -16,222 +33,332 @@ class CommandRouter:
 
         lower = command.lower()
 
-        # ------------------------
-        # Datei lesen
-        # ------------------------
+        # ==================================
+        # PROJEKTVERWALTUNG V1
+        # ==================================
 
-        if lower.startswith("lies datei"):
+        if lower.startswith("neues projekt"):
 
-            path = command.replace(
-                "lies datei",
+            project_name = command.replace(
+                "neues projekt",
                 "",
                 1
             ).strip()
 
-            return self.runner.run(
-                "read_file",
-                path=path
+            if not project_name:
+                return (
+                    "Verwendung:\n"
+                    "neues projekt NAME"
+                )
+
+            self.runner.run(
+                "create_project",
+                project_name=project_name
             )
 
-        # ------------------------
-        # Datei schreiben
-        # ------------------------
+            return (
+                f"Projekt erstellt: "
+                f"{project_name}"
+            )
 
-        if lower.startswith("schreibe datei"):
+        if lower == "zeige projekte":
 
-            try:
+            projects = self.runner.run(
+                "list_projects"
+            )
 
-                parts = command.split("|", 1)
-
-                path = (
-                    parts[0]
-                    .replace(
-                        "schreibe datei",
-                        "",
-                        1
-                    )
-                    .strip()
-                )
-
-                content = parts[1].strip()
-
-                success = self.runner.run(
-                    "write_file",
-                    path=path,
-                    content=content
-                )
-
-                if success:
-                    return (
-                        f"Datei geschrieben: {path}"
-                    )
-
-                return "Fehler beim Schreiben."
-
-            except Exception:
-
+            if not projects:
                 return (
-                    "Verwendung:\n"
-                    "schreibe datei PFAD | TEXT"
+                    "Keine Projekte vorhanden."
                 )
 
-        # ------------------------
-        # Datei anhängen
-        # ------------------------
+            return "\n".join(projects)
 
-        if lower.startswith("hänge an datei"):
-
-            try:
-
-                parts = command.split("|", 1)
-
-                path = (
-                    parts[0]
-                    .replace(
-                        "hänge an datei",
-                        "",
-                        1
-                    )
-                    .strip()
-                )
-
-                content = (
-                    "\n" +
-                    parts[1].strip()
-                )
-
-                success = self.runner.run(
-                    "append_file",
-                    path=path,
-                    content=content
-                )
-
-                if success:
-                    return (
-                        f"Text angehängt: {path}"
-                    )
-
-                return "Fehler beim Anhängen."
-
-            except Exception:
-
-                return (
-                    "Verwendung:\n"
-                    "hänge an datei PFAD | TEXT"
-                )
-
-        # ------------------------
-        # Text ersetzen
-        # ------------------------
-
-        if lower.startswith("ersetze in datei"):
+        if lower.startswith("projektaufgabe"):
 
             try:
 
                 parts = command.split(
-                    "|"
+                    "|",
+                    1
                 )
 
-                file_path = (
+                project_name = (
                     parts[0]
                     .replace(
-                        "ersetze in datei",
+                        "projektaufgabe",
                         "",
                         1
                     )
                     .strip()
                 )
 
-                old_text = (
-                    parts[1]
-                    .strip()
+                title = parts[1].strip()
+
+                task = self.runner.run(
+                    "add_project_task",
+                    project_name=project_name,
+                    title=title
                 )
 
-                new_text = (
-                    parts[2]
-                    .strip()
-                )
+                if task is None:
 
-                success = self.runner.run(
-                    "replace_in_file",
-                    path=file_path,
-                    old_text=old_text,
-                    new_text=new_text
-                )
-
-                if success:
                     return (
-                        "Text ersetzt."
+                        "Projekt nicht gefunden."
                     )
 
                 return (
-                    "Ersetzen fehlgeschlagen."
+                    f"Aufgabe angelegt:\n"
+                    f"[{task['id']}] "
+                    f"{task['title']}"
                 )
 
             except Exception:
 
                 return (
                     "Verwendung:\n"
-                    "ersetze in datei PFAD | ALT | NEU"
+                    "projektaufgabe "
+                    "PROJEKT | TEXT"
                 )
 
-        # ------------------------
-        # In Datei suchen
-        # ------------------------
+        if lower.startswith("zeige projekt"):
 
-        if lower.startswith("suche in datei"):
-
-            try:
-
-                parts = command.split("|", 1)
-
-                file_path = (
-                    parts[0]
-                    .replace(
-                        "suche in datei",
-                        "",
-                        1
-                    )
-                    .strip()
-                )
-
-                search_text = parts[1].strip()
-
-                return self.runner.run(
-                    "search_in_file",
-                    path=file_path,
-                    query=search_text
-                )
-
-            except Exception:
-
-                return (
-                    "Verwendung:\n"
-                    "suche in datei PFAD | SUCHTEXT"
-                )
-
-        # ------------------------
-        # Ordner anzeigen
-        # ------------------------
-
-        if lower.startswith("zeige ordner"):
-
-            path = command.replace(
-                "zeige ordner",
+            project_name = command.replace(
+                "zeige projekt",
                 "",
                 1
             ).strip()
 
-            return self.runner.run(
-                "list_files",
-                path=path
+            project = self.runner.run(
+                "get_project",
+                project_name=project_name
             )
 
-        # ------------------------
-        # Directory Tree
-        # ------------------------
+            if not project:
 
-        if lower.startswith("zeige baum"):
+                return (
+                    "Projekt nicht gefunden."
+                )
+
+            lines = [
+                f"Projekt: {project_name}",
+                ""
+            ]
+
+            tasks = project.get(
+                "tasks",
+                []
+            )
+
+            if not tasks:
+
+                lines.append(
+                    "Keine Aufgaben."
+                )
+
+            else:
+
+                for task in tasks:
+
+                    lines.append(
+                        f"[{task['id']}] "
+                        f"{task['status'].upper()} "
+                        f"{task['title']}"
+                    )
+
+            return "\n".join(lines)
+
+        if lower.startswith(
+            "nächste projektaufgabe"
+        ):
+
+            project_name = command.replace(
+                "nächste projektaufgabe",
+                "",
+                1
+            ).strip()
+
+            task = self.runner.run(
+                "next_project_task",
+                project_name=project_name
+            )
+
+            if task is None:
+
+                return (
+                    "Keine offene "
+                    "Projektaufgabe gefunden."
+                )
+
+            return (
+                "Nächste Projektaufgabe:\n"
+                f"[{task['id']}] "
+                f"{task['title']}"
+            )
+
+        # ==================================
+        # AUFGABENVERWALTUNG
+        # ==================================
+
+        if lower.startswith(
+            "neue aufgabe"
+        ):
+
+            title = command.replace(
+                "neue aufgabe",
+                "",
+                1
+            ).strip()
+
+            task = self.runner.run(
+                "add_task",
+                title=title
+            )
+
+            return (
+                f"Aufgabe angelegt:\n"
+                f"[{task['id']}] "
+                f"{task['title']}"
+            )
+
+        if lower == "zeige aufgaben":
+
+            return self.format_tasks(
+                self.runner.run(
+                    "list_tasks"
+                )
+            )
+
+        if lower.startswith(
+            "erledige aufgabe"
+        ):
+
+            try:
+
+                task_id = int(
+                    command.replace(
+                        "erledige aufgabe",
+                        "",
+                        1
+                    ).strip()
+                )
+
+                success = self.runner.run(
+                    "complete_task",
+                    task_id=task_id
+                )
+
+                if success:
+
+                    return (
+                        f"Aufgabe "
+                        f"{task_id} erledigt."
+                    )
+
+                return (
+                    "Aufgabe nicht gefunden."
+                )
+
+            except Exception:
+
+                return (
+                    "Verwendung:\n"
+                    "erledige aufgabe ID"
+                )
+
+        if lower.startswith(
+            "lösche aufgabe"
+        ):
+
+            try:
+
+                task_id = int(
+                    command.replace(
+                        "lösche aufgabe",
+                        "",
+                        1
+                    ).strip()
+                )
+
+                success = self.runner.run(
+                    "delete_task",
+                    task_id=task_id
+                )
+
+                if success:
+
+                    return (
+                        f"Aufgabe "
+                        f"{task_id} gelöscht."
+                    )
+
+                return (
+                    "Aufgabe nicht gefunden."
+                )
+
+            except Exception:
+
+                return (
+                    "Verwendung:\n"
+                    "lösche aufgabe ID"
+                )
+
+        if lower == (
+            "was ist die nächste aufgabe"
+        ):
+
+            task = self.runner.run(
+                "next_task"
+            )
+
+            if not task:
+
+                return (
+                    "Keine offene Aufgabe."
+                )
+
+            return (
+                f"[{task['id']}] "
+                f"{task['title']}"
+            )
+
+        # ==================================
+        # GEDÄCHTNIS
+        # ==================================
+
+        if lower == "zeige gedächtnis":
+
+            return str(
+                self.runner.run(
+                    "memory_all"
+                )
+            )
+
+        if lower == "wie heiße ich":
+
+            value = self.runner.run(
+                "recall",
+                key="name"
+            )
+
+            if value:
+
+                return (
+                    f"Du heißt "
+                    f"{value}."
+                )
+
+            return (
+                "Kein Name gespeichert."
+            )
+
+        # ==================================
+        # DATEISYSTEM
+        # ==================================
+
+        if lower.startswith(
+            "zeige baum"
+        ):
 
             path = command.replace(
                 "zeige baum",
@@ -244,56 +371,9 @@ class CommandRouter:
                 path=path
             )
 
-        # ------------------------
-        # Ordner erstellen
-        # ------------------------
-
-        if lower.startswith("erstelle ordner"):
-
-            path = command.replace(
-                "erstelle ordner",
-                "",
-                1
-            ).strip()
-
-            success = self.runner.run(
-                "create_folder",
-                path=path
-            )
-
-            if success:
-                return (
-                    f"Ordner erstellt: {path}"
-                )
-
-            return "Fehler beim Erstellen."
-
-        # ------------------------
-        # Datei löschen
-        # ------------------------
-
-        if lower.startswith("lösche datei"):
-
-            path = command.replace(
-                "lösche datei",
-                "",
-                1
-            ).strip()
-
-            success = self.runner.run(
-                "delete_file",
-                path=path
-            )
-
-            if success:
-                return (
-                    f"Datei gelöscht: {path}"
-                )
-
-            return "Fehler beim Löschen."
-
         return (
-            f"Befehl nicht erkannt: {command}"
+            f"Befehl nicht erkannt: "
+            f"{command}"
         )
 
 
@@ -302,47 +382,55 @@ if __name__ == "__main__":
     router = CommandRouter()
 
     print(
-        "\n=== OpenJarvis Command Router ==="
+        "\n=== OpenJarvis Router ==="
     )
 
     print(
-        "\nVerfügbare Befehle:"
+        "\nProjektverwaltung:"
     )
 
     print(
-        "lies datei <pfad>"
+        "neues projekt OpenJarvis"
     )
 
     print(
-        "schreibe datei <pfad> | <text>"
+        "zeige projekte"
     )
 
     print(
-        "hänge an datei <pfad> | <text>"
+        "projektaufgabe OpenJarvis | GUI bauen"
     )
 
     print(
-        "ersetze in datei <pfad> | <alt> | <neu>"
+        "zeige projekt OpenJarvis"
     )
 
     print(
-        "suche in datei <pfad> | <text>"
+        "nächste projektaufgabe OpenJarvis"
     )
 
     print(
-        "zeige ordner <pfad>"
+        "\nAufgabenverwaltung:"
     )
 
     print(
-        "zeige baum <pfad>"
+        "neue aufgabe TEXT"
     )
 
     print(
-        "erstelle ordner <pfad>"
+        "zeige aufgaben"
     )
 
     print(
-        "lösche datei <pfad>"
+        "erledige aufgabe ID"
+    )
+
+    print(
+        "lösche aufgabe ID"
+    )
+
+    print(
+        "was ist die nächste aufgabe"
     )
 
     print(
@@ -355,11 +443,11 @@ if __name__ == "__main__":
             "Befehl: "
         )
 
-        if command.lower() in [
+        if command.lower() in (
             "exit",
             "quit",
             "ende"
-        ]:
+        ):
             break
 
         try:

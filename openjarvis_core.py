@@ -195,11 +195,9 @@ class OpenJarvisFileSystem:
             if content is None:
                 return False
 
-            updated_content = (
-                content.replace(
-                    old_text,
-                    new_text
-                )
+            updated_content = content.replace(
+                old_text,
+                new_text
             )
 
             target.write_text(
@@ -275,50 +273,72 @@ class OpenJarvisFileSystem:
 
         try:
 
-            target = self.sandbox.validate(
+            root = self.sandbox.validate(
                 path
             )
 
-            if not target.exists():
+            if not root.exists():
 
                 return (
                     "Pfad existiert nicht."
                 )
 
-            result = [
-                str(target)
+            lines = [
+                str(root)
             ]
 
-            entries = sorted(
-                target.iterdir(),
-                key=lambda p: (
-                    not p.is_dir(),
-                    p.name.lower()
-                )
-            )
-
-            for index, entry in enumerate(
-                entries
+            def walk(
+                current_path,
+                prefix=""
             ):
 
-                is_last = (
-                    index ==
-                    len(entries) - 1
+                entries = sorted(
+                    current_path.iterdir(),
+                    key=lambda p: (
+                        not p.is_dir(),
+                        p.name.lower()
+                    )
                 )
 
-                prefix = (
-                    "└── "
-                    if is_last
-                    else "├── "
-                )
+                for index, entry in enumerate(
+                    entries
+                ):
 
-                result.append(
-                    prefix +
-                    entry.name
-                )
+                    is_last = (
+                        index ==
+                        len(entries) - 1
+                    )
+
+                    connector = (
+                        "└── "
+                        if is_last
+                        else "├── "
+                    )
+
+                    lines.append(
+                        prefix +
+                        connector +
+                        entry.name
+                    )
+
+                    if entry.is_dir():
+
+                        extension = (
+                            "    "
+                            if is_last
+                            else "│   "
+                        )
+
+                        walk(
+                            entry,
+                            prefix +
+                            extension
+                        )
+
+            walk(root)
 
             return "\n".join(
-                result
+                lines
             )
 
         except Exception as e:
@@ -326,3 +346,23 @@ class OpenJarvisFileSystem:
             return (
                 f"Fehler: {e}"
             )
+
+
+if __name__ == "__main__":
+
+    fs = OpenJarvisFileSystem(
+        [
+            r"F:\Jarvis",
+            r"F:\TestDaten"
+        ]
+    )
+
+    print(
+        "\n=== RECURSIVE TREE TEST ===\n"
+    )
+
+    print(
+        fs.directory_tree(
+            r"F:\Jarvis"
+        )
+    )

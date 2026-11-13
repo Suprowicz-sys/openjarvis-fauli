@@ -1,6 +1,15 @@
 {
-  "name": "Michael",
-  "freundin": "",
-  "interessen": [],
-  "erinnerungen": []
+    "freundin": "",
+    "interessen": [
+        "Python",
+        "KI",
+        "OpenRouter"
+    ],
+    "erinnerungen": [
+        "GitHub funktioniert jetzt",
+        "Filesystem fertiggestellt",
+        "GitHub Repository erfolgreich erstellt"
+    ],
+    "stadt": "Düsseldorf",
+    "name": "Michael"
 }

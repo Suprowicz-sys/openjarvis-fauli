@@ -1,0 +1,44 @@
+{
+    "OpenJarvis": {
+        "tasks": [
+            {
+                "id": 1,
+                "status": "erledigt",
+                "title": "GUI bauen"
+            },
+            {
+                "id": 3,
+                "status": "offen",
+                "title": "GUI bauen"
+            },
+            {
+                "id": 4,
+                "status": "offen",
+                "title": "Lokales LLM integrieren"
+            },
+            {
+                "id": 5,
+                "status": "offen",
+                "title": "GUI bauen"
+            },
+            {
+                "id": 6,
+                "status": "offen",
+                "title": "Lokales LLM integrieren"
+            },
+            {
+                "id": 7,
+                "status": "offen",
+                "title": "GUI bauen"
+            },
+            {
+                "id": 8,
+                "status": "offen",
+                "title": "Lokales LLM"
+            }
+        ]
+    },
+    "Fauli": {
+        "tasks": []
+    }
+}

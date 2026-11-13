@@ -1,0 +1,27 @@
+[
+    {
+        "id": 1,
+        "status": "erledigt",
+        "title": "OpenJarvis GUI bauen"
+    },
+    {
+        "id": 3,
+        "status": "offen",
+        "title": "OpenJarvis GUI bauen"
+    },
+    {
+        "id": 4,
+        "status": "offen",
+        "title": "Memory V3 entwickeln"
+    },
+    {
+        "id": 5,
+        "status": "offen",
+        "title": "OpenJarvis GUI bauen"
+    },
+    {
+        "id": 6,
+        "status": "offen",
+        "title": "Lokales LLM integrieren"
+    }
+]
